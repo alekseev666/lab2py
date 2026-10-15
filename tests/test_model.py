@@ -143,6 +143,7 @@ def test_compare_by_area():
 
 def test_report_word(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("model.report.REPORTS_DIR", "reports")
     path = create_report_word(59.0, 4.4593)
     assert path == os.path.join("reports", "Отчёт.docx")
     doc = Document(path)
@@ -153,6 +154,7 @@ def test_report_word(tmp_path, monkeypatch):
 
 def test_report_excel(tmp_path, monkeypatch, house):
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("model.report.REPORTS_DIR", "reports")
     path = create_report_excel(house, 21, -5, 1)
     assert path == os.path.join("reports", "Отчёт.xlsx")
     ws = load_workbook(path).active

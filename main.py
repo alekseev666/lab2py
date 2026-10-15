@@ -1,5 +1,6 @@
 from model.house import House
 from model.report import create_report_word, create_report_excel
+from model.database import Database
 
 def input_number(text, positive=True):
     while True:
@@ -63,7 +64,7 @@ def print_house(h):
         for r in f.rooms:
             print(f"    {r}: {r.a:g} x {r.b:g} x {r.c:g} м")
 
-def calculate(h):
+def calculate(h, db):
     T_in = input_number("Температура в здании, °C: ", positive=False)
     T_out = input_number("Температура на улице, °C: ", positive=False)
     while T_out >= T_in:
@@ -82,6 +83,8 @@ def calculate(h):
     print(f"Общая площадь помещения {h.area():.1f} м²")
     print(f"Тепловая мощность для обогрева помещения "
           f"{Q:.1f} кВт")
+    calc_id = db.save(h, T_in, T_out, K)
+    print(f"Расчёт сохранён в базу данных (№{calc_id})")
 
     print("\nСохранить отчёт: 1 - Word, 2 - Excel, 3 - оба, 0 - не сохранять")
     choice = input("Ваш выбор: ").strip()
@@ -92,24 +95,48 @@ def calculate(h):
     if choice in ("2", "3"):
         print(f"Сохранён {create_report_excel(h, T_in, T_out, K)}")
 
+def open_history(db):
+    rows = db.history()
+    if not rows:
+        print("История пуста")
+        return None
+    print(f"\n{'№':>4}  {'Дата':<16}  {'Адрес':<25} {'Площадь':>10} {'Мощность':>10}")
+    for calc_id, date, address, area, q in rows:
+        print(f"{calc_id:>4}  {date:<16}  {address:<25} {area:>7.1f} м² {q:>6.1f} кВт")
+    while True:
+        value = input("\nНомер расчёта, чтобы открыть дом (0 - назад): ").strip()
+        if value == "0":
+            return None
+        if value.isdigit():
+            h = db.load_house(int(value))
+            if h is not None:
+                return h
+        print("Нет такого расчёта")
+
 def main():
     print("Расчёт площади и тепловой мощности помещений")
-    while True:
-        print("\n1 - создать дом")
-        print("2 - демонстрационный дом")
-        print("0 - выход")
-        choice = input("Ваш выбор: ").strip()
-        if choice == "1":
-            h = input_house()
-        elif choice == "2":
-            h = demo_house()
-        elif choice == "0":
-            break
-        else:
-            print("Нет такого пункта")
-            continue
-        print_house(h)
-        calculate(h)
+    with Database() as db:
+        while True:
+            print("\n1 - создать дом")
+            print("2 - демонстрационный дом")
+            print("3 - история расчётов")
+            print("0 - выход")
+            choice = input("Ваш выбор: ").strip()
+            if choice == "1":
+                h = input_house()
+            elif choice == "2":
+                h = demo_house()
+            elif choice == "3":
+                h = open_history(db)
+                if h is None:
+                    continue
+            elif choice == "0":
+                break
+            else:
+                print("Нет такого пункта")
+                continue
+            print_house(h)
+            calculate(h, db)
 
 if __name__ == "__main__":
     try:

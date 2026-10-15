@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 class Premises(ABC):
-    """Абстрактное помещение: комната, квартира или дом"""
 
     @abstractmethod
     def area(self):

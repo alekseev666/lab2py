@@ -4,7 +4,7 @@ from docx import Document
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-REPORTS_DIR = "reports"
+REPORTS_DIR = os.environ.get("REPORTS_DIR", "reports")
 
 def report_path(name):
     os.makedirs(REPORTS_DIR, exist_ok=True)
