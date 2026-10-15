@@ -1,13 +1,23 @@
+import os
+
 from docx import Document
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
+REPORTS_DIR = "reports"
+
+def report_path(name):
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    return os.path.join(REPORTS_DIR, name)
+
 def create_report_word(S,Q):
     doc = Document()
     doc.add_heading('Отчёт', level=1)
-    doc.add_paragraph(f"Площадь помещения = {str(S)}")
-    doc.add_paragraph(f"Q = {str(Q)}")
-    doc.save("Отчёт.docx")
+    doc.add_paragraph(f"Площадь помещения = {S:.2f} м²")
+    doc.add_paragraph(f"Q = {Q:.2f} кВт")
+    path = report_path("Отчёт.docx")
+    doc.save(path)
+    return path
 
 def create_report_excel(house, t_in, t_out, k):
     wb = Workbook()
@@ -21,9 +31,10 @@ def create_report_excel(house, t_in, t_out, k):
                "Площадь, м²", "Объём, м³"])
     for f in house.flats:
         for r in f.rooms:
-            ws.append([f.number, r.name, r.a, r.b, r.c, r.area(), r.volume()])
+            ws.append([f.number, r.name, r.a, r.b, r.c,
+                       round(r.area(), 2), round(r.volume(), 2)])
     ws.append(["Итого", None, None, None, None,
-               house.total_area(), house.total_volume()])
+               round(house.area(), 2), round(house.volume(), 2)])
     total_row = ws.max_row
 
     ws.append([])
@@ -39,4 +50,6 @@ def create_report_excel(house, t_in, t_out, k):
     for col in "BCDEFG":
         ws.column_dimensions[col].width = 14
 
-    wb.save("Отчёт.xlsx")
+    path = report_path("Отчёт.xlsx")
+    wb.save(path)
+    return path
